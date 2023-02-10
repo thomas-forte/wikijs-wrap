@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15-alpine
+    
+    container_name: wikijs_db
+
+    restart: always
+    
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_USER=${DB_USER}
+      - PG_PORT=${DB_PORT}
+
+    logging:
+      driver: "none"
+
+    volumes:
+      - wikijs_data:/var/lib/postgresql/data
+
+  wikijs:
+    image: ghcr.io/requarks/wiki:2
+
+    container_name: wikijs
+
+    restart: always
+
+    # Remove the exposed ports if using network bridge with reverse proxy
+    ports:
+      - 3000:80
+
+    environment:
+      - DB_TYPE=postgres
+      - DB_HOST=db
+      - DB_PORT
+      - DB_USER
+      - DB_PASS
+      - DB_NAME
+
+    networks:
+      - default
+      # Use this for exposing wikijs indirectly through a reverse proxy
+      # - proxy
+
+volumes:
+  wikijs_data:
+    external: true
+
+# Use this for exposing wikijs indirectly through a reverse proxy
+# networks:
+#   proxy:
+#     name: ${NETWORK_NAME}
+#     external: true
